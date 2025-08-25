@@ -11,7 +11,6 @@ A computer vision system for automatically detecting scenes in videos, chunking 
 - **Hybrid Embeddings**: Combines CLIP visual and OpenAI text embeddings
 - **Fast Retrieval**: Uses FAISS for efficient similarity search
 - **Text-to-Video Search**: Find video scenes using natural language descriptions
-- **Video-to-Video Search**: Find similar scenes using video clips
 - **Interactive GUI**: User-friendly graphical interface for search
 - **Metadata Management**: Tracks timing, duration, and source information
 
@@ -49,7 +48,7 @@ A computer vision system for automatically detecting scenes in videos, chunking 
 
 3. **Install FFmpeg** (required for video processing):
     - Windows: Download from https://ffmpeg.org/download.html
-    - Or use chocolatey: `choco install ffmpeg`
+    - Or use Winget
 
 4. **Set up OpenAI API (for GPT-4 features)**:
    - Copy `config.template` to `.env`
