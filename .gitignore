@@ -32,6 +32,14 @@ wheels/
 .installed.cfg
 *.egg
 
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+test_report.html
+.pytest_cache/
+
 # Jupyter
 .ipynb_checkpoints
 
@@ -62,3 +70,9 @@ models/*.bin
 # Logs
 *.log
 logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
