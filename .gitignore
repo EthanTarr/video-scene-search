@@ -1,7 +1,14 @@
-# Data directories
-data/raw_videos/
-data/scenes/
-data/embeddings/
+# Data directories - Keep structure but exclude all data files
+data/raw_videos/*
+!data/raw_videos/.gitkeep
+data/scenes/*
+!data/scenes/.gitkeep
+data/embeddings/*
+!data/embeddings/.gitkeep
+data/metadata/*
+!data/metadata/.gitkeep
+
+# Video files (already covered above, but keeping for clarity)
 *.mp4
 *.avi
 *.mov
@@ -9,6 +16,24 @@ data/embeddings/
 *.wmv
 *.flv
 *.webm
+
+# Additional data file formats
+*.json
+*.csv
+*.tsv
+*.txt
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pth
+*.pt
+*.bin
+*.onnx
+*.tflite
+*.pb
 
 # Python
 __pycache__/
