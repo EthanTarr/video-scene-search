@@ -3,7 +3,7 @@
 Comprehensive test runner for video-scene-search project.
 Runs all test suites with coverage reporting and multiple output formats.
 
-🎯 CURRENT STATUS: 100% TEST SUCCESS RATE (77/77 tests passing)
+🎯 CURRENT STATUS: 100% TEST SUCCESS RATE (76/76 tests passing)
 ✅ All test suites are now passing consistently
 ✅ Tests complete in ~22 seconds with no hanging
 ✅ Comprehensive coverage of all major functionality
@@ -11,11 +11,11 @@ Runs all test suites with coverage reporting and multiple output formats.
 Test Suites:
 - Embeddings: 19/19 tests ✅ (CLIP, GPT-4, FAISS, hybrid search)
 - Scene Detection: 11/11 tests ✅ (PySceneDetect, video chunking, workflow)
-- GUI: 15/15 tests ✅ (Tkinter interface, search functionality, error handling)
+- GUI: 14/14 tests ✅ (Tkinter interface, text search, error handling)
 - Scripts: 11/11 tests ✅ (CLI tools, argument parsing, interactive mode)
 - Installation: 17/17 tests ✅ (dependency management, error handling)
 
-For detailed test information, see TESTING.md and CHANGELOG.md
+For detailed test information, see TESTING.md
 """
 
 import subprocess
