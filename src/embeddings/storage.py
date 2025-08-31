@@ -17,17 +17,42 @@ class EmbeddingStorage:
 
     def add_embeddings(self, embeddings: np.ndarray, metadata: List[Dict[str, Any]]):
         """Add embeddings to the index with associated metadata."""
-        # Normalize embeddings for cosine similarity
-        faiss.normalize_L2(embeddings)
+        try:
+            # Ensure embeddings are float32 and contiguous
+            embeddings = np.ascontiguousarray(embeddings, dtype=np.float32)
+            
+            # Validate embeddings shape and content
+            if embeddings.size == 0:
+                raise ValueError("Empty embeddings array")
+            
+            if embeddings.ndim != 2:
+                raise ValueError(f"Expected 2D array, got {embeddings.ndim}D")
+            
+            if embeddings.shape[1] != self.dimension:
+                raise ValueError(f"Expected dimension {self.dimension}, got {embeddings.shape[1]}")
+            
+            # Check for NaN or infinite values
+            if np.any(np.isnan(embeddings)) or np.any(np.isinf(embeddings)):
+                raise ValueError("Embeddings contain NaN or infinite values")
+            
+            # Normalize embeddings for cosine similarity
+            faiss.normalize_L2(embeddings)
 
-        self.index.add(embeddings.astype(np.float32))
-        self.metadata.extend(metadata)
-        print(f"Added {len(embeddings)} embeddings to index")
+            self.index.add(embeddings)
+            self.metadata.extend(metadata)
+            print(f"Added {len(embeddings)} embeddings to index")
+            
+        except Exception as e:
+            print(f"Error adding embeddings: {e}")
+            print(f"Embeddings shape: {embeddings.shape}")
+            print(f"Embeddings dtype: {embeddings.dtype}")
+            print(f"Embeddings min/max: {np.min(embeddings)}, {np.max(embeddings)}")
+            raise
 
     def search(self, query_embedding: np.ndarray, k: int = 10) -> List[Dict[str, Any]]:
         """Search for similar embeddings."""
-        # Normalize query
-        query_embedding = query_embedding.reshape(1, -1).astype(np.float32)
+        # Ensure query is float32 and contiguous
+        query_embedding = np.ascontiguousarray(query_embedding.reshape(1, -1), dtype=np.float32)
         faiss.normalize_L2(query_embedding)
 
         scores, indices = self.index.search(query_embedding, k)
@@ -71,3 +96,20 @@ class EmbeddingStorage:
             'unique_videos': len(set(m['video_source'] for m in self.metadata)),
             'total_duration': sum(m['duration'] for m in self.metadata)
         }
+    
+    def clear(self):
+        """Clear all embeddings and metadata."""
+        # Reset FAISS index
+        self.index = faiss.IndexFlatIP(self.dimension)
+        self.metadata.clear()
+        
+        # Remove saved files
+        index_path = os.path.join(self.storage_path, "scene_embeddings.index")
+        metadata_path = os.path.join(self.storage_path, "scene_embeddings_metadata.pkl")
+        
+        if os.path.exists(index_path):
+            os.remove(index_path)
+        if os.path.exists(metadata_path):
+            os.remove(metadata_path)
+        
+        print("Cleared all embeddings and metadata")

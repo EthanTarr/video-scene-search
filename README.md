@@ -4,24 +4,71 @@ A computer vision system for automatically detecting scenes in videos, chunking 
 
 ## Features
 
-- **Automatic Scene Detection**: Uses PySceneDetect to identify scene boundaries
-- **Video Chunking**: Splits videos into individual scene clips
-- **CLIP Embeddings**: Creates vector embeddings for visual similarity search
-- **GPT-4 Enhanced Search**: Advanced search with prompt enhancement and reranking
-- **Hybrid Embeddings**: Combines CLIP visual and OpenAI text embeddings
-- **Fast Retrieval**: Uses FAISS for efficient similarity search
-- **Text-to-Video Search**: Find video scenes using natural language descriptions
-- **Interactive GUI**: User-friendly graphical interface for search
-- **Metadata Management**: Tracks timing, duration, and source information
-- **Comprehensive Testing**: Full test suite
+- **🎬 Scene Detection**: Automatic video scene boundary detection using PySceneDetect
+- **✂️ Video Chunking**: Extract individual scenes as separate video files
+- **🧠 CLIP Embeddings**: Generate semantic embeddings for video scenes using CLIP
+- **🔍 Intelligent Search**: Find video scenes using natural language descriptions
+- **🤖 GPT-4 Enhancement**: AI-powered query enhancement and result reranking
+- **💾 FAISS Storage**: Fast vector similarity search with efficient indexing
+- **🖥️ Enhanced GUI**: Integrated interface for both video processing and search
+- **📊 Data Management**: Comprehensive database management and statistics
+
+## Enhanced GUI Interface
+
+The project now features a **unified GUI application** that combines video processing and search capabilities:
+
+### 🔍 **Search Tab**
+- **Natural Language Search**: Find scenes using text descriptions
+- **Clickable Results**: Play video clips directly from search results
+- **Advanced Options**: Configurable search parameters and result limits
+
+### 🎬 **Process Videos Tab**
+- **Video Input**: Select video files for processing
+- **Scene Detection**: Automatic scene boundary detection with configurable parameters
+- **Video Chunking**: Extract individual scenes as separate files
+- **Embedding Generation**: Create CLIP embeddings for all detected scenes
+- **Progress Tracking**: Real-time progress bar and detailed processing log
+- **Background Processing**: Non-blocking video processing in separate threads
+
+### 📊 **Data Management Tab**
+- **Database Statistics**: View total embeddings, videos, and duration
+- **Storage Information**: Monitor data directory structure and file counts
+- **Database Operations**: Clear database, refresh information
+- **Real-time Updates**: Automatic refresh after processing operations
+
+### 🚀 **Key Benefits**
+- **Unified Workflow**: Process videos and search in one application
+- **User-Friendly**: Intuitive tabbed interface for different operations
+- **Real-time Feedback**: Live progress updates and processing logs
+- **Professional Interface**: Modern Tkinter-based design with proper error handling
+- **Stable Search**: Fixed OpenMP runtime conflicts for reliable search functionality
+
+## Quick Start
+
+### 🚀 **Launch the Enhanced GUI**
+
+The easiest way to use the project is through the enhanced GUI interface:
+
+**Windows Users:**
+- **Double-click** `launch_gui.bat` (recommended)
+- **Or run** `launch_gui.ps1` in PowerShell
+- **Or manually** set environment and run: `set KMP_DUPLICATE_LIB_OK=TRUE && python scripts/search_gui.py`
+
+**Other Platforms:**
+```bash
+export KMP_DUPLICATE_LIB_OK=TRUE
+python scripts/search_gui.py
+```
+
+### 🔧 **What the GUI Does**
+1. **Process Videos**: Upload videos to automatically detect scenes and create searchable embeddings
+2. **Search Content**: Use natural language to find specific scenes (e.g., "person walking", "car driving")
+3. **Manage Data**: View statistics, clear database, and monitor your video collection
+
+### ⚠️ **Important Note**
+The GUI automatically sets `KMP_DUPLICATE_LIB_OK=TRUE` to resolve OpenMP runtime conflicts that could cause crashes during search operations.
 
 ## Setup
-
-1. **Create the project directory**:
-   ```bash
-   mkdir video-scene-search
-   cd video-scene-search
-   ```
 
 2. **Install dependencies** (choose one method):
 
@@ -56,9 +103,38 @@ A computer vision system for automatically detecting scenes in videos, chunking 
    - Add your OpenAI API key to the `.env` file
    - Get an API key from: https://platform.openai.com/account/api-keys
 
-## Testing
+## Troubleshooting
 
-The project includes a comprehensive test suite with **100% test success rate**:
+### 🔍 **Search Function Crashes**
+
+If the search function causes the program to crash, this is likely due to **OpenMP runtime conflicts** between PyTorch, FAISS, and OpenCV. The solution is already implemented in the fixed GUI:
+
+**Symptoms:**
+- Program crashes when clicking "Search" button
+- Error messages about OpenMP runtime conflicts
+- Search works for video processing but fails for text search
+
+**Solution:**
+- Use `scripts/search_gui.py` instead of other GUI versions
+- The GUI automatically sets `KMP_DUPLICATE_LIB_OK=TRUE`
+- Or manually set the environment variable before launching
+
+**Why This Happens:**
+Multiple libraries (PyTorch, FAISS, OpenCV) are linked with different OpenMP runtimes, causing conflicts when they're loaded simultaneously. The environment variable allows multiple runtimes to coexist.
+
+### 🐛 **Other Common Issues**
+
+**Import Errors:**
+- Ensure all dependencies are installed: `pip install -r requirements.txt`
+- Use Anaconda environment for better compatibility
+- Check that `src/` directory is in Python path
+
+**Video Processing Errors:**
+- Verify FFmpeg is installed and in PATH
+- Check video file format compatibility
+- Ensure sufficient disk space for scene extraction
+
+## Testing
 
 - **Total Tests:** 76/76 ✅
 - **Test Suites:** 5 (Embeddings, Scene Detection, GUI, Scripts, Installation)
@@ -94,24 +170,61 @@ For detailed testing information, see [TESTING.md](TESTING.md).
 
 ## Quick Start
 
-1. **Place your videos** in the `data/raw_videos/` folder
+### 🚀 **Launch Enhanced GUI**
+```bash
+# Run the enhanced GUI with video processing and search capabilities
+python test_enhanced_gui.py
 
-2. **Process videos** to detect scenes and create embeddings:
-   ```bash
-   python scripts/process_videos.py data/raw_videos/
-   ```
+# Or run the GUI directly
+python scripts/search_gui.py
+```
 
-3. **Search for scenes** using text descriptions:
-   ```bash
-   python scripts/search_scenes.py --query "person walking outdoors"
-   python scripts/search_scenes.py --query "car driving at night"
-   python scripts/search_scenes.py --query "people talking indoors"
-   ```
+### 🎬 **Process Videos (New!)**
+1. **Open the "🎬 Process Videos" tab**
+2. **Select a video file** using the Browse button
+3. **Configure processing options**:
+   - Scene detection threshold (default: 30.0)
+   - Minimum scene length (default: 1.0 seconds)
+   - Output directory (default: "data")
+4. **Click "🚀 Start Processing"** to begin
+5. **Monitor progress** with the progress bar and log
+6. **Processing includes**:
+   - Scene detection using PySceneDetect
+   - Video chunking into individual scenes
+   - CLIP embedding generation for each scene
+   - Storage in FAISS database
 
-4. **View database statistics**:
-   ```bash
-   python scripts/search_scenes.py --stats
-   ```
+### 🔍 **Search Processed Videos**
+1. **Switch to the "🔍 Search" tab**
+2. **Enter a search query** (e.g., "person walking outdoors")
+3. **Configure search options**:
+   - Enable/disable GPT-4 enhancement
+   - Set maximum number of results
+4. **Click "🔍 Search"** to find matching scenes
+5. **Click blue video links** to play scene clips
+
+### 📊 **Manage Your Data**
+1. **Open the "📊 Data Management" tab**
+2. **View database statistics**:
+   - Total embeddings and videos
+   - Total duration processed
+   - Storage information
+3. **Manage your database**:
+   - Clear all data
+   - Export data
+   - Refresh information
+
+### 💻 **Command Line Usage**
+```bash
+# Process videos from command line
+python scripts/process_videos.py "path/to/video.mp4"
+
+# Search scenes from command line
+python scripts/search_scenes.py --query "person walking outdoors"
+
+# Interactive search mode
+python scripts/search_scenes.py --interactive
+```
 
 ## Usage Examples
 

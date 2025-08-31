@@ -57,11 +57,13 @@ class SceneEmbeddingExtractor:
 
         # Average embeddings across frames
         scene_embedding = np.mean(embeddings, axis=0)
-        return scene_embedding.flatten()
+        # Ensure float32 output for FAISS compatibility
+        return scene_embedding.flatten().astype(np.float32)
 
     def extract_text_embedding(self, text: str) -> np.ndarray:
         """Extract embedding from text description."""
         with torch.no_grad():
             text_tokens = clip.tokenize([text]).to(self.device)
             text_embedding = self.model.encode_text(text_tokens)
-            return text_embedding.cpu().numpy().flatten()
+            # Ensure float32 output for FAISS compatibility
+            return text_embedding.cpu().numpy().flatten().astype(np.float32)
