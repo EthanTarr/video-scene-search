@@ -41,11 +41,11 @@ except ImportError as e:
     torch = None
 
 try:
-    import clip
+    import open_clip
     print("✅ CLIP imported successfully")
 except ImportError as e:
     print(f"❌ CLIP import error: {e}")
-    clip = None
+    open_clip = None
 
 try:
     import cv2
@@ -101,7 +101,7 @@ except ImportError as e:
 required_modules = {
     'FAISS': faiss is not None,
     'PyTorch': torch is not None,
-    'CLIP': clip is not None,
+    'CLIP': open_clip is not None,
     'OpenCV': cv2 is not None,
     'Pandas': pd is not None,
     'SceneEmbeddingExtractor': SceneEmbeddingExtractor is not None,
@@ -119,7 +119,7 @@ for module, status in required_modules.items():
 core_modules_available = all([
     faiss is not None,
     torch is not None,
-    clip is not None,
+    open_clip is not None,
     cv2 is not None,
     pd is not None
 ])

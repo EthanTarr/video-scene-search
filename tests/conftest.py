@@ -16,9 +16,37 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 @pytest.fixture
 def temp_dir():
     """Create a temporary directory for test files."""
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = Path(tempfile.mkdtemp())
     yield temp_dir
-    shutil.rmtree(temp_dir)
+    shutil.rmtree(str(temp_dir))
+
+@pytest.fixture
+def test_data_dir():
+    """Get the path to the test data directory."""
+    return Path(__file__).parent / "data"
+
+@pytest.fixture
+def test_video_path(test_data_dir):
+    """Get the path to the test video file."""
+    video_path = test_data_dir / "raw_videos" / "ForBiggerBlazes.mp4"
+    if not video_path.exists():
+        pytest.skip(f"Test video not found at {video_path}")
+    return str(video_path)
+
+@pytest.fixture
+def test_scenes_dir(test_data_dir):
+    """Get the path to the test scenes directory."""
+    return test_data_dir / "scenes"
+
+@pytest.fixture
+def test_embeddings_dir(test_data_dir):
+    """Get the path to the test embeddings directory."""
+    return test_data_dir / "embeddings"
+
+@pytest.fixture
+def test_metadata_dir(test_data_dir):
+    """Get the path to the test metadata directory."""
+    return test_data_dir / "metadata"
 
 @pytest.fixture
 def sample_video_path(temp_dir):

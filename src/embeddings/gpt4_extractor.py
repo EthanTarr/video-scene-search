@@ -4,7 +4,7 @@ Combines CLIP visual embeddings with OpenAI's text embeddings for improved searc
 """
 
 import torch
-import clip
+import open_clip
 import cv2
 import numpy as np
 from PIL import Image
@@ -46,7 +46,7 @@ class GPT4EnhancedEmbeddingExtractor:
         
         # Initialize CLIP model
         print(f"Loading CLIP model {clip_model} on {self.device}")
-        self.clip_model, self.clip_preprocess = clip.load(clip_model, device=self.device)
+        self.clip_model, _, self.clip_preprocess = open_clip.create_model_and_transforms(clip_model, pretrained="openai", device=self.device)
         self.clip_model.eval()
         
         # Initialize OpenAI client
@@ -121,7 +121,7 @@ class GPT4EnhancedEmbeddingExtractor:
             CLIP text embedding
         """
         with torch.no_grad():
-            text_tokens = clip.tokenize([text]).to(self.device)
+            text_tokens = open_clip.tokenize([text]).to(self.device)
             text_embedding = self.clip_model.encode_text(text_tokens)
             return text_embedding.cpu().numpy().flatten()
     

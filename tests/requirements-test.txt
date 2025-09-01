@@ -12,3 +12,14 @@ freezegun>=1.2.0
 # Coverage and reporting
 coverage>=7.0.0
 pytest-json-report>=1.5.0
+
+# Core dependencies for testing (these should match the main project)
+numpy>=1.21.0
+opencv-python>=4.5.0
+pandas>=1.3.0
+Pillow>=8.0.0
+
+# Optional dependencies (for full testing)
+# torch>=1.9.0  # Uncomment if PyTorch is available
+# clip  # Uncomment if CLIP is available
+# faiss-cpu>=1.7.0  # Uncomment if FAISS is available

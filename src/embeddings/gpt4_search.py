@@ -323,6 +323,36 @@ Return only the video numbers (1-{len(results)}) in order of relevance, separate
         
         return similar_scenes[:k]
     
+    def add_embeddings(self, embeddings: np.ndarray, metadata: List[Dict[str, Any]]):
+        """
+        Add embeddings to the storage.
+        
+        Args:
+            embeddings: Array of embeddings to add
+            metadata: List of metadata dictionaries
+        """
+        self.clip_storage.add_embeddings(embeddings, metadata)
+    
+    def save(self):
+        """Save embeddings to storage."""
+        self.clip_storage.save()
+    
+    def enhance_query(self, query: str) -> str:
+        """
+        Enhance a search query using GPT-4.
+        
+        Args:
+            query: Original search query
+            
+        Returns:
+            Enhanced query with additional visual details
+        """
+        try:
+            return self.extractor.enhance_search_prompt(query)
+        except Exception as e:
+            self.logger.warning(f"Failed to enhance query: {e}")
+            return query
+    
     def display_search_results(self, 
                              results: List[Dict[str, Any]], 
                              show_paths: bool = False):

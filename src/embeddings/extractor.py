@@ -1,5 +1,5 @@
 import torch
-import clip
+import open_clip
 import cv2
 import numpy as np
 from PIL import Image
@@ -7,14 +7,14 @@ from typing import List, Optional
 import os
 
 class SceneEmbeddingExtractor:
-    def __init__(self, model_name: str = "ViT-B/32", device: str = "auto"):
+    def __init__(self, model_name: str = "ViT-B-32", device: str = "auto"):
         if device == "auto":
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
 
         print(f"Loading CLIP model {model_name} on {self.device}")
-        self.model, self.preprocess = clip.load(model_name, device=self.device)
+        self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained="openai", device=self.device)
         self.model.eval()
 
     def extract_video_embedding(self, video_path: str,
@@ -63,7 +63,7 @@ class SceneEmbeddingExtractor:
     def extract_text_embedding(self, text: str) -> np.ndarray:
         """Extract embedding from text description."""
         with torch.no_grad():
-            text_tokens = clip.tokenize([text]).to(self.device)
+            text_tokens = open_clip.tokenize([text]).to(self.device)
             text_embedding = self.model.encode_text(text_tokens)
             # Ensure float32 output for FAISS compatibility
             return text_embedding.cpu().numpy().flatten().astype(np.float32)
