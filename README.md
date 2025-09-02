@@ -19,6 +19,7 @@ The project now features a **unified GUI application** that combines video proce
 
 ### 🔍 **Search Tab**
 - **Natural Language Search**: Find scenes using text descriptions
+- **Visual Thumbnails**: Display clickable image thumbnails showing the beginning of each scene
 - **Clickable Results**: Play video clips directly from search results
 - **Advanced Options**: Configurable search parameters and result limits
 
@@ -71,9 +72,11 @@ The GUI automatically sets `KMP_DUPLICATE_LIB_OK=TRUE` to resolve OpenMP runtime
 ### 🔧 **Recent Updates (January 2025)**
 - **Fixed Launch Scripts**: Updated `launch_gui.bat` and `launch_gui.ps1` to use virtual environment automatically
 - **Removed Import Status Window**: GUI now launches directly without showing module import status
-- **Fixed Test Suite**: All 91 tests now pass (previously 2 were skipped)
+- **Fixed Test Suite**: All 93 tests now pass (previously 2 were skipped)
 - **Enhanced GUI Tests**: Windows display support with real Tkinter windows (no more hanging)
 - **GPT-4 Integration**: Fixed enhanced query generation functionality
+- **Visual Thumbnails**: Search results now display clickable image thumbnails showing the beginning of each scene
+- **Improved Thumbnail Extraction**: Fixed timestamp calculation to work reliably with scene file durations
 
 ## Setup
 

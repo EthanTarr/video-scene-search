@@ -10,6 +10,8 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 from pathlib import Path
 import threading
+import tempfile
+from PIL import Image, ImageTk
 
 # Fix OpenMP runtime conflict
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
@@ -172,10 +174,107 @@ class ClickableText(tk.Text):
                        font=('Arial', 10, 'underline bold'))
 
 
+class ImageResultsFrame(tk.Frame):
+    """Frame for displaying search results as clickable images."""
+    
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.images = []
+        self.image_labels = []
+        self.current_row = 0
+        self.current_col = 0
+        self.max_cols = 3
+        
+    def clear(self):
+        """Clear all images from the frame."""
+        for label in self.image_labels:
+            label.destroy()
+        self.image_labels.clear()
+        self.images.clear()
+        self.current_row = 0
+        self.current_col = 0
+    
+    def add_result(self, thumbnail_image, video_path, metadata, callback):
+        """Add a search result with thumbnail image."""
+        try:
+            if thumbnail_image is None:
+                # Create placeholder image if thumbnail extraction failed
+                placeholder = Image.new('RGB', (200, 150), color='lightgray')
+                # Add text to placeholder
+                from PIL import ImageDraw, ImageFont
+                draw = ImageDraw.Draw(placeholder)
+                try:
+                    font = ImageFont.truetype("arial.ttf", 16)
+                except:
+                    font = ImageFont.load_default()
+                text = "No Preview"
+                bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                x = (200 - text_width) // 2
+                y = (150 - text_height) // 2
+                draw.text((x, y), text, fill='black', font=font)
+                thumbnail_image = placeholder
+            
+            # Convert PIL image to PhotoImage
+            photo = ImageTk.PhotoImage(thumbnail_image)
+            self.images.append(photo)  # Keep reference to prevent garbage collection
+            
+            # Create frame for this result
+            result_frame = tk.Frame(self, relief='raised', bd=2, bg='white')
+            result_frame.grid(row=self.current_row, column=self.current_col, padx=5, pady=5, sticky='nsew')
+            
+            # Create clickable image label
+            image_label = tk.Label(result_frame, image=photo, cursor='hand2', bg='white')
+            image_label.pack(pady=5)
+            image_label.bind('<Button-1>', lambda e, path=video_path: callback(path))
+            self.image_labels.append(image_label)
+            
+            # Add metadata text
+            video_name = metadata.get('video_source', 'Unknown')
+            if len(video_name) > 20:
+                video_name = video_name[:17] + "..."
+                
+            info_text = f"{video_name}\n"
+            info_text += f"Scene: {metadata.get('scene_id', 'N/A')}\n"
+            info_text += f"Time: {metadata.get('start_time', 0):.1f}s - {metadata.get('end_time', 0):.1f}s\n"
+            info_text += f"Similarity: {metadata.get('similarity', 0):.3f}"
+            
+            info_label = tk.Label(result_frame, text=info_text, font=('Arial', 8), 
+                                 bg='white', justify='center', wraplength=180)
+            info_label.pack(pady=2)
+            
+            # Update grid position
+            self.current_col += 1
+            if self.current_col >= self.max_cols:
+                self.current_col = 0
+                self.current_row += 1
+            
+            # Configure grid weights
+            self.grid_columnconfigure(self.current_col, weight=1)
+            self.grid_rowconfigure(self.current_row, weight=1)
+            
+        except Exception as e:
+            print(f"Error adding result: {e}")
+            # Create a simple text-based result as fallback
+            result_frame = tk.Frame(self, relief='raised', bd=2, bg='lightgray')
+            result_frame.grid(row=self.current_row, column=self.current_col, padx=5, pady=5, sticky='nsew')
+            
+            error_label = tk.Label(result_frame, text=f"Error loading\n{metadata.get('video_source', 'Unknown')}", 
+                                  font=('Arial', 10), bg='lightgray', justify='center')
+            error_label.pack(pady=20)
+            error_label.bind('<Button-1>', lambda e, path=video_path: callback(path))
+            
+            self.current_col += 1
+            if self.current_col >= self.max_cols:
+                self.current_col = 0
+                self.current_row += 1
+
+
 class VideoSearchGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Video Scene Search & Processing - Fixed")
+        self.root.title("Video Scene Search")
         self.root.geometry("1000x800")
         
         # Initialize components
@@ -211,7 +310,7 @@ class VideoSearchGUI:
         main_frame.rowconfigure(1, weight=1)
         
         # Title
-        title_label = ttk.Label(main_frame, text="🎬 Video Scene Search & Processing", 
+        title_label = ttk.Label(main_frame, text="🎬 Video Scene Search", 
                                font=('Arial', 18, 'bold'))
         title_label.grid(row=0, column=0, pady=(0, 10))
         
@@ -267,22 +366,36 @@ class VideoSearchGUI:
         results_label = ttk.Label(search_frame, text="Search Results:", font=('Arial', 12, 'bold'))
         results_label.grid(row=3, column=0, sticky=(tk.W, tk.N), pady=(10, 5))
         
-        # Create frame for results text with scrollbar
+        # Create frame for image results only
         results_frame = ttk.Frame(search_frame)
         results_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(25, 0))
         results_frame.columnconfigure(0, weight=1)
         results_frame.rowconfigure(0, weight=1)
         
-        # Custom clickable text widget
-        self.results_text = ClickableText(results_frame, width=90, height=25, wrap=tk.WORD,
-                                         font=('Consolas', 10), bg='white', relief='sunken', bd=2)
+        # Create scrollable frame for images
+        self.results_canvas = tk.Canvas(results_frame, bg='white')
+        self.results_scrollbar = ttk.Scrollbar(results_frame, orient='vertical', command=self.results_canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.results_canvas)
         
-        # Add scrollbar
-        scrollbar = ttk.Scrollbar(results_frame, orient='vertical', command=self.results_text.yview)
-        self.results_text.configure(yscrollcommand=scrollbar.set)
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
+        )
         
-        self.results_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.results_canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.results_canvas.configure(yscrollcommand=self.results_scrollbar.set)
+        
+        # Image results frame
+        self.image_results = ImageResultsFrame(self.scrollable_frame)
+        self.image_results.pack(fill='both', expand=True)
+        
+        self.results_canvas.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.results_scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        
+        # Add mousewheel scrolling
+        def _on_mousewheel(event):
+            self.results_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        self.results_canvas.bind_all("<MouseWheel>", _on_mousewheel)
     
     def create_processing_tab(self):
         """Create the video processing tab."""
@@ -631,24 +744,28 @@ class VideoSearchGUI:
     def show_initial_info(self):
         """Show initial information about the database."""
         if not self.clip_storage or not self.clip_storage.metadata:
-            self.results_text.insert_with_tags("No video embeddings found.\n")
-            self.results_text.insert_with_tags("Please process videos first using the Process Videos tab.\n\n")
+            # Show no data message in the image area
+            self.image_results.clear()
+            no_data_label = tk.Label(self.scrollable_frame, 
+                                   text="No video embeddings found.\nPlease process videos first using the Process Videos tab.", 
+                                   font=('Arial', 14), 
+                                   bg='white', 
+                                   fg='gray',
+                                   justify='center')
+            no_data_label.pack(pady=50)
             return
         
         stats = self.clip_storage.get_stats()
         
-        self.results_text.insert_with_tags("=" * 60 + "\n")
-        self.results_text.insert_with_tags("🎬 Video Scene Search - Ready!\n")
-        self.results_text.insert_with_tags("=" * 60 + "\n\n")
-        
-        self.results_text.insert_with_tags(f"Database Statistics:\n")
-        self.results_text.insert_with_tags(f"  • Total embeddings: {stats['total_embeddings']}\n")
-        self.results_text.insert_with_tags(f"  • Unique videos: {stats['unique_videos']}\n")
-        self.results_text.insert_with_tags(f"  • Total duration: {stats['total_duration']:.1f} seconds\n\n")
-        
-        self.results_text.insert_with_tags("✨ Enter a search query above and click 'Search' to find matching video scenes.\n")
-        self.results_text.insert_with_tags("📹 Examples: 'person walking', 'car driving', 'sunset', 'people talking'\n")
-        self.results_text.insert_with_tags("🖱️  Click on blue video links to play clips instantly!\n\n")
+        # Show welcome message in the image area
+        self.image_results.clear()
+        welcome_label = tk.Label(self.scrollable_frame, 
+                               text=f"🎬 Video Scene Search - Ready!\n\nDatabase Statistics:\n• Total embeddings: {stats['total_embeddings']}\n• Unique videos: {stats['unique_videos']}\n• Total duration: {stats['total_duration']:.1f} seconds\n\n✨ Enter a search query above and click 'Search' to find matching video scenes.\n📹 Examples: 'person walking', 'car driving', 'sunset', 'people talking'\n🖱️ Click on thumbnails to play video clips!", 
+                               font=('Arial', 12), 
+                               bg='white', 
+                               fg='black',
+                               justify='center')
+        welcome_label.pack(pady=50)
     
     def search(self):
         """Perform search with improved error handling."""
@@ -670,7 +787,7 @@ class VideoSearchGUI:
                 max_results = int(self.max_results_var.get())
                 
                 # Clear previous results
-                self.results_text.clear_text()
+                self.image_results.clear()
                 
                 # Use standard CLIP search with error handling
                 try:
@@ -680,48 +797,62 @@ class VideoSearchGUI:
                     results = self.clip_storage.search(query_embedding, max_results)
                     print(f"Search returned {len(results)} results")
                     
-                    # Display results
-                    self.display_results(results, query)
+                    # Display results in main thread
+                    self.root.after(0, lambda: self.display_results(results, query))
                     
-                    self.status_var.set(f"Found {len(results)} results for: {query}")
+                    self.root.after(0, lambda: self.status_var.set(f"Found {len(results)} results for: {query}"))
                     
                 except Exception as search_error:
                     print(f"Search error: {search_error}")
                     error_msg = f"Search failed: {str(search_error)}"
-                    self.status_var.set(error_msg)
-                    messagebox.showerror("Search Error", error_msg)
+                    self.root.after(0, lambda: self.status_var.set(error_msg))
+                    self.root.after(0, lambda: messagebox.showerror("Search Error", error_msg))
                     
                     # Show error in results area
-                    self.results_text.insert_with_tags(f"❌ Search Error: {error_msg}\n\n")
-                    self.results_text.insert_with_tags("This may be due to:\n")
-                    self.results_text.insert_with_tags("• OpenMP runtime conflicts\n")
-                    self.results_text.insert_with_tags("• Memory issues\n")
-                    self.results_text.insert_with_tags("• Corrupted embeddings\n\n")
-                    self.results_text.insert_with_tags("Try restarting the application or reprocessing the videos.\n")
+                    def show_error():
+                        self.image_results.clear()
+                        error_label = tk.Label(self.scrollable_frame, 
+                                             text=f"❌ Search Error: {error_msg}\n\nThis may be due to:\n• OpenMP runtime conflicts\n• Memory issues\n• Corrupted embeddings\n\nTry restarting the application or reprocessing the videos.", 
+                                             font=('Arial', 12), 
+                                             bg='white', 
+                                             fg='red',
+                                             justify='center')
+                        error_label.pack(pady=50)
+                    self.root.after(0, show_error)
                 
             except Exception as e:
                 print(f"General search error: {e}")
-                self.status_var.set(f"Search error: {str(e)}")
-                messagebox.showerror("Search Error", f"Search failed: {str(e)}")
+                self.root.after(0, lambda: self.status_var.set(f"Search error: {str(e)}"))
+                self.root.after(0, lambda: messagebox.showerror("Search Error", f"Search failed: {str(e)}"))
         
         thread = threading.Thread(target=search_in_thread)
         thread.daemon = True
         thread.start()
     
     def display_results(self, results, query):
-        """Display search results with clickable video links."""
+        """Display search results as clickable image thumbnails."""
         if not results:
-            self.results_text.insert_with_tags(f"No results found for: '{query}'\n")
+            # Show no results message in the image area
+            self.image_results.clear()
+            # Create a simple text label for no results
+            no_results_label = tk.Label(self.scrollable_frame, 
+                                      text=f"No results found for: '{query}'", 
+                                      font=('Arial', 14), 
+                                      bg='white', 
+                                      fg='gray')
+            no_results_label.pack(pady=50)
             self.current_results = []
             return
         
         # Store current results for context menu operations
         self.current_results = results
         
-        # Header
-        self.results_text.insert_with_tags("=" * 80 + "\n")
-        self.results_text.insert_with_tags(f"🎯 SEARCH RESULTS FOR: {query}\n")
-        self.results_text.insert_with_tags("=" * 80 + "\n\n")
+        # Clear image results
+        self.image_results.clear()
+        
+        # Update status
+        self.status_var.set(f"Extracting thumbnails for {len(results)} results...")
+        self.root.update()
         
         for i, result in enumerate(results, 1):
             # Video info
@@ -733,39 +864,62 @@ class VideoSearchGUI:
             end_time = result.get('end_time', 0)
             scene_path = result.get('scene_path', '')
             
-            # Result header
-            self.results_text.insert_with_tags(f"{i}. 📹 {video_name}\n")
-            self.results_text.insert_with_tags(f"   Scene: {scene_id} | Duration: {duration:.1f}s | Similarity: {similarity:.4f}\n")
-            self.results_text.insert_with_tags(f"   ⏱️  Time: {start_time:.1f}s - {end_time:.1f}s\n")
+            # Update status for each result
+            self.status_var.set(f"Processing result {i}/{len(results)}: {video_name}")
+            self.root.update()
             
-            # Add clickable video link if path exists
+            # Extract thumbnail and add to image results
+            print(f"Processing result {i}: scene_path={scene_path}, exists={os.path.exists(scene_path) if scene_path else False}")
             if scene_path and os.path.exists(scene_path):
-                # Create clickable link
-                link_text = f"   🎬 ▶️ CLICK TO PLAY: {os.path.basename(scene_path)}"
-                tag_name = f"link_{i}_{scene_id}"
-                
-                self.results_text.add_link(tag_name, link_text, lambda path=scene_path: self.open_video(path))
-                self.results_text.insert_with_tags(link_text + "\n", [tag_name])
-                
-                # Also add path for reference
-                self.results_text.insert_with_tags(f"   📁 Path: {scene_path}\n")
+                try:
+                    # Extract thumbnail from the beginning of the scene
+                    thumbnail_timestamp = 0.1  # Use 0.1 seconds from the start
+                    print(f"Extracting thumbnail at timestamp: {thumbnail_timestamp}")
+                    thumbnail = self.extract_video_thumbnail(scene_path, thumbnail_timestamp)
+                    
+                    metadata = {
+                        'video_source': video_name,
+                        'scene_id': scene_id,
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        'similarity': similarity,
+                        'duration': duration
+                    }
+                    self.image_results.add_result(thumbnail, scene_path, metadata, self.open_video)
+                    
+                except Exception as e:
+                    print(f"Error processing result {i}: {e}")
+                    # Add placeholder for failed extraction
+                    metadata = {
+                        'video_source': video_name,
+                        'scene_id': scene_id,
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        'similarity': similarity,
+                        'duration': duration
+                    }
+                    self.image_results.add_result(None, scene_path, metadata, self.open_video)
             else:
-                self.results_text.insert_with_tags(f"   ❌ Video file not found: {scene_path}\n")
-            
-            self.results_text.insert_with_tags("-" * 60 + "\n\n")
+                print(f"Video file not found: {scene_path}")
         
-        # Add instruction text
-        self.results_text.insert_with_tags("\n💡 TIP: Click on the blue ▶️ CLICK TO PLAY links above to open video clips!\n")
+        # Update status
+        self.status_var.set(f"Found {len(results)} results - Click thumbnails to play videos")
         
-        # Scroll to top
-        self.results_text.see(1.0)
+        # Update canvas scroll region
+        self.results_canvas.update_idletasks()
+        self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
     
     def clear_results(self):
         """Clear search results."""
-        self.results_text.clear_text()
+        self.image_results.clear()
         self.query_var.set("")
         self.current_results = []
         self.status_var.set("Ready")
+        
+        # Clear any existing widgets in scrollable frame
+        for widget in self.scrollable_frame.winfo_children():
+            if isinstance(widget, tk.Label) and widget.cget('text').startswith('No results found'):
+                widget.destroy()
     
     def show_stats(self):
         """Show database statistics."""
@@ -775,23 +929,91 @@ class VideoSearchGUI:
         
         stats = self.clip_storage.get_stats()
         
-        self.results_text.clear_text()
-        self.results_text.insert_with_tags("=" * 50 + "\n")
-        self.results_text.insert_with_tags("📊 DATABASE STATISTICS\n")
-        self.results_text.insert_with_tags("=" * 50 + "\n\n")
+        # Clear image results and show stats
+        self.image_results.clear()
         
-        self.results_text.insert_with_tags(f"Total embeddings: {stats['total_embeddings']}\n")
-        self.results_text.insert_with_tags(f"Unique videos: {stats['unique_videos']}\n")
-        self.results_text.insert_with_tags(f"Total duration: {stats['total_duration']:.1f} seconds ({stats['total_duration']/60:.1f} minutes)\n\n")
+        # Create stats text
+        stats_text = "📊 DATABASE STATISTICS\n" + "=" * 50 + "\n\n"
+        stats_text += f"Total embeddings: {stats['total_embeddings']}\n"
+        stats_text += f"Unique videos: {stats['unique_videos']}\n"
+        stats_text += f"Total duration: {stats['total_duration']:.1f} seconds ({stats['total_duration']/60:.1f} minutes)\n\n"
         
         # Show videos in database
         video_sources = set(m['video_source'] for m in self.clip_storage.metadata)
-        self.results_text.insert_with_tags("📹 Videos in database:\n")
+        stats_text += "📹 Videos in database:\n"
         for video in sorted(video_sources):
             scene_count = sum(1 for m in self.clip_storage.metadata if m['video_source'] == video)
             video_duration = sum(m['duration'] for m in self.clip_storage.metadata if m['video_source'] == video)
-            self.results_text.insert_with_tags(f"  - {video}: {scene_count} scenes, {video_duration:.1f}s\n")
+            stats_text += f"  - {video}: {scene_count} scenes, {video_duration:.1f}s\n"
+        
+        # Display stats in the image area
+        stats_label = tk.Label(self.scrollable_frame, 
+                             text=stats_text, 
+                             font=('Consolas', 10), 
+                             bg='white', 
+                             fg='black',
+                             justify='left')
+        stats_label.pack(pady=20)
     
+    def extract_video_thumbnail(self, video_path, timestamp=0.1):
+        """Extract a thumbnail frame from video at specified timestamp."""
+        if not cv2:
+            print("OpenCV not available for thumbnail extraction")
+            return None
+            
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                print(f"Failed to open video: {video_path}")
+                return None
+            
+            # Get video duration to ensure we don't exceed it
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            video_duration = frame_count / fps if fps > 0 else 0
+            
+            # Use a safe timestamp within the video duration (prefer beginning)
+            safe_timestamp = min(timestamp, video_duration * 0.5)  # Use max 50% of duration
+            if safe_timestamp < 0.05:  # If video is very short, use 5% of duration
+                safe_timestamp = max(0.05, video_duration * 0.1)
+            
+            print(f"Extracting thumbnail from: {video_path} at {safe_timestamp:.2f}s (video duration: {video_duration:.2f}s)")
+            
+            # Set to specific timestamp (in seconds)
+            cap.set(cv2.CAP_PROP_POS_MSEC, safe_timestamp * 1000)
+            
+            ret, frame = cap.read()
+            cap.release()
+            
+            if not ret:
+                print(f"Failed to read frame from: {video_path}")
+                return None
+            
+            # Convert BGR to RGB
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            
+            # Resize to thumbnail size
+            height, width = frame_rgb.shape[:2]
+            max_size = 200
+            if width > height:
+                new_width = max_size
+                new_height = int(height * max_size / width)
+            else:
+                new_height = max_size
+                new_width = int(width * max_size / height)
+            
+            resized_frame = cv2.resize(frame_rgb, (new_width, new_height))
+            
+            # Convert to PIL Image
+            pil_image = Image.fromarray(resized_frame)
+            print(f"Successfully extracted thumbnail: {new_width}x{new_height}")
+            
+            return pil_image
+            
+        except Exception as e:
+            print(f"Error extracting thumbnail from {video_path}: {e}")
+            return None
+
     def open_video(self, video_path):
         """Open/play a video file using the default system video player."""
         if not os.path.exists(video_path):

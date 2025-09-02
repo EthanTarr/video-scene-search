@@ -146,17 +146,22 @@ tests/
 - **Fix**: Added missing methods to the class
 - **Result**: All GPT-4 integration tests now pass
 
-### 4. **Empty Text Handling** ✅ FIXED
+### 4. **GUI Thumbnail Display** ✅ FIXED
+- **Issue**: Search results showed "No Preview Available" instead of actual video thumbnails
+- **Fix**: Fixed timestamp calculation to use beginning of scenes (0.1s) instead of middle
+- **Result**: All search results now display proper video thumbnails from scene beginnings
+
+### 5. **Empty Text Handling** ✅ FIXED
 - **Issue**: Test expected ValueError for empty text, but implementation handled it gracefully
 - **Fix**: Updated test to handle empty text gracefully
 - **Result**: Text embedding tests now pass
 
-### 5. **GPT-4 Enhanced Query Generation** ✅ FIXED
+### 6. **GPT-4 Enhanced Query Generation** ✅ FIXED
 - **Issue**: Missing `enhance_search_prompt` method in `GPT4EnhancedEmbeddingExtractor`
 - **Fix**: Added missing method to handle query enhancement
 - **Result**: GPT-4 enhanced query generation test now passes
 
-### 6. **GUI Tests on Windows** ✅ FIXED
+### 7. **GUI Tests on Windows** ✅ FIXED
 - **Issue**: GUI tests were skipped due to display requirements
 - **Fix**: Implemented real Tkinter window support with proper fixture management
 - **Result**: 23/24 GUI tests now pass on Windows with real display
@@ -225,6 +230,7 @@ python -m pip install torch torchvision open_clip_torch faiss-cpu opencv-python 
 - ✅ **Script integration tests** passing (15/15)
 - ✅ **GUI tests working on Windows** - Real display support
 - ✅ **GPT-4 tests fixed** - Enhanced query generation working
+- ✅ **GUI thumbnail display fixed** - Search results show actual video thumbnails
 - ✅ **All tests passing** - 100% test success rate achieved
 - ✅ **Production ready** test suite
 
