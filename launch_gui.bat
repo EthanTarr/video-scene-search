@@ -11,6 +11,9 @@ echo - Manage your video database
 echo.
 
 cd /d "%~dp0"
-"%USERPROFILE%\anaconda3\python.exe" scripts/search_gui.py
+
+REM Activate virtual environment and launch GUI
+call "video-scene-search-env\Scripts\activate.bat"
+python scripts/search_gui.py
 
 pause

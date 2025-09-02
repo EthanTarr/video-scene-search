@@ -19,82 +19,58 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent / "src"
 sys.path.insert(0, str(src_dir))
 
-print(f"Added {src_dir} to Python path")
-print(f"OpenMP conflict resolved: KMP_DUPLICATE_LIB_OK={os.environ.get('KMP_DUPLICATE_LIB_OK')}")
-
 # Import modules with detailed error handling
 import numpy as np
-print("✅ NumPy imported successfully")
 
 try:
     import faiss
-    print("✅ FAISS imported successfully")
 except ImportError as e:
-    print(f"❌ FAISS import error: {e}")
     faiss = None
 
 try:
     import torch
-    print("✅ PyTorch imported successfully")
 except ImportError as e:
-    print(f"❌ PyTorch import error: {e}")
     torch = None
 
 try:
     import open_clip
-    print("✅ CLIP imported successfully")
 except ImportError as e:
-    print(f"❌ CLIP import error: {e}")
     open_clip = None
 
 try:
     import cv2
-    print("✅ OpenCV imported successfully")
 except ImportError as e:
-    print(f"❌ OpenCV import error: {e}")
     cv2 = None
 
 try:
     import pandas as pd
-    print("✅ Pandas imported successfully")
 except ImportError as e:
-    print(f"❌ Pandas import error: {e}")
     pd = None
 
 # Now try to import our source modules
 try:
     from embeddings.gpt4_search import GPT4VideoSearchEngine
-    print("✅ GPT4VideoSearchEngine imported successfully")
 except ImportError as e:
-    print(f"❌ GPT4VideoSearchEngine import error: {e}")
     GPT4VideoSearchEngine = None
 
 try:
     from embeddings.extractor import SceneEmbeddingExtractor
-    print("✅ SceneEmbeddingExtractor imported successfully")
 except ImportError as e:
-    print(f"❌ SceneEmbeddingExtractor import error: {e}")
     SceneEmbeddingExtractor = None
 
 try:
     from embeddings.storage import EmbeddingStorage
-    print("✅ EmbeddingStorage imported successfully")
 except ImportError as e:
-    print(f"❌ EmbeddingStorage import error: {e}")
     EmbeddingStorage = None
 
 try:
     from scene_detection.detector import SceneDetector
-    print("✅ SceneDetector imported successfully")
 except ImportError as e:
-    print(f"❌ SceneDetector import error: {e}")
     SceneDetector = None
 
 try:
     from scene_detection.chunker import VideoChunker
-    print("✅ VideoChunker imported successfully")
 except ImportError as e:
-    print(f"❌ VideoChunker import error: {e}")
     VideoChunker = None
 
 # Check if we have the minimum required modules
@@ -110,10 +86,7 @@ required_modules = {
     'VideoChunker': VideoChunker is not None,
 }
 
-print("\n📊 Module Import Status:")
-for module, status in required_modules.items():
-    status_icon = "✅" if status else "❌"
-    print(f"   {status_icon} {module}")
+
 
 # Check if we have the core functionality
 core_modules_available = all([
@@ -214,9 +187,6 @@ class VideoSearchGUI:
         # Create GUI
         self.create_widgets()
         
-        # Show module status
-        self.show_module_status()
-        
         # Load embeddings on startup if possible
         if source_modules_available:
             self.load_embeddings()
@@ -225,23 +195,7 @@ class VideoSearchGUI:
         self.refresh_stats()
         self.refresh_info()
     
-    def show_module_status(self):
-        """Show the status of imported modules."""
-        status_text = "📊 Module Status:\n\n"
-        
-        for module, status in required_modules.items():
-            status_icon = "✅" if status else "❌"
-            status_text += f"{status_icon} {module}\n"
-        
-        if not core_modules_available:
-            status_text += "\n⚠️  Some core modules are missing!"
-            status_text += "\n   Video processing may not work properly."
-        
-        if not source_modules_available:
-            status_text += "\n⚠️  Some source modules are missing!"
-            status_text += "\n   Please check the console for import errors."
-        
-        messagebox.showinfo("Module Status", status_text)
+
     
     def create_widgets(self):
         """Create the GUI widgets with tabbed interface."""
@@ -458,7 +412,7 @@ class VideoSearchGUI:
     def start_processing(self):
         """Start video processing in a separate thread."""
         if not source_modules_available:
-            messagebox.showerror("Error", "Required modules not available. Check the module status.")
+            messagebox.showerror("Error", "Required modules not available. Please check your installation.")
             return
             
         video_path = self.video_path_var.get().strip()

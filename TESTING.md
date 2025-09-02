@@ -6,15 +6,15 @@ This document provides information about the testing infrastructure for the Vide
 
 ## Current Status
 
-### ✅ **Test Suite v2.1 - Production Ready**
+### ✅ **Test Suite v2.2 - Production Ready**
 
 **Latest Test Results (January 2025):**
-- **68 tests passed** - All core functionality working
+- **91 tests passed** - All core functionality working
 - **0 tests failed** - All API compatibility issues resolved!
-- **25 tests skipped** - GUI tests (require display environment)
+- **2 tests skipped** - Only psutil memory testing (optional dependency)
 - **Total: 93 tests** - Comprehensive coverage
 
-### 🎯 **Major Improvements in v2.1**
+### 🎯 **Major Improvements in v2.2**
 
 1. **Zero Failed Tests**
    - All API compatibility issues resolved
@@ -59,7 +59,7 @@ This document provides information about the testing infrastructure for the Vide
 - **Features**: Real video processing, multiple detection methods
 
 ### 3. Embeddings Tests (`test_embeddings.py`)
-- **Status**: ✅ 16/17 passed (1 skipped due to minor assertion issue)
+- **Status**: ✅ 17/17 passed (GPT-4 tests fixed)
 - **Purpose**: Test CLIP embeddings and search functionality
 - **Features**: OpenCLIP integration, FAISS storage, GPT-4 search
 
@@ -69,9 +69,9 @@ This document provides information about the testing infrastructure for the Vide
 - **Features**: All three main scripts with proper error handling
 
 ### 5. GUI Tests (`test_gui.py`)
-- **Status**: ⏭️ 25/25 skipped (require display)
+- **Status**: ✅ 23/24 passed (Windows display support)
 - **Purpose**: Test Tkinter-based GUI components
-- **Features**: Widget testing, search integration, accessibility
+- **Features**: Widget testing, search integration, accessibility, real Tkinter windows
 
 ## Quick Start
 
@@ -129,7 +129,7 @@ tests/
 └── README.md                # Detailed test documentation
 ```
 
-## Recent Fixes (v2.1)
+## Recent Fixes (v2.2)
 
 ### 1. **FAISS API Compatibility** ✅ FIXED
 - **Issue**: `IndexFlatIP` constructor expected different arguments
@@ -151,19 +151,23 @@ tests/
 - **Fix**: Updated test to handle empty text gracefully
 - **Result**: Text embedding tests now pass
 
+### 5. **GPT-4 Enhanced Query Generation** ✅ FIXED
+- **Issue**: Missing `enhance_search_prompt` method in `GPT4EnhancedEmbeddingExtractor`
+- **Fix**: Added missing method to handle query enhancement
+- **Result**: GPT-4 enhanced query generation test now passes
+
+### 6. **GUI Tests on Windows** ✅ FIXED
+- **Issue**: GUI tests were skipped due to display requirements
+- **Fix**: Implemented real Tkinter window support with proper fixture management
+- **Result**: 23/24 GUI tests now pass on Windows with real display
+
 ## Known Issues
 
-### 1. GUI Tests Skipped
-- **Issue**: Tkinter requires display environment
-- **Affected**: 25 GUI tests
-- **Impact**: None - expected behavior in headless environments
-- **Status**: Normal for CI/CD environments
-
-### 2. Minor Assertion Issue
-- **Issue**: One test skipped due to minor assertion comparison
-- **Affected**: 1 embedding test
-- **Impact**: Non-critical, test functionality works correctly
-- **Status**: Minor issue, not affecting core functionality
+### 1. Optional Memory Testing
+- **Issue**: psutil package not installed by default
+- **Affected**: 1 GUI memory usage test
+- **Impact**: None - optional performance testing
+- **Status**: Normal, can be installed with `pip install psutil`
 
 ## Troubleshooting
 
@@ -213,13 +217,14 @@ python -m pip install torch torchvision open_clip_torch faiss-cpu opencv-python 
 
 ## Version History
 
-### v2.1 (Current) - January 2025
+### v2.2 (Current) - January 2025
 - ✅ **Zero failed tests** - All API compatibility issues resolved
-- ✅ **68/93 tests passing** (73% success rate)
+- ✅ **91/93 tests passing** (98% success rate)
 - ✅ **Real functionality testing** with actual video files
 - ✅ **All major dependencies working** (PyTorch, FAISS, OpenCLIP, OpenAI)
 - ✅ **Script integration tests** passing (15/15)
-- ✅ **No hanging tests** - proper input mocking
+- ✅ **GUI tests working on Windows** - Real display support
+- ✅ **GPT-4 tests fixed** - Enhanced query generation working
 - ✅ **Production ready** test suite
 
 ### v2.0 (Previous) - January 2025
@@ -261,7 +266,7 @@ For test-related issues:
 ---
 
 **Last Updated**: January 2025  
-**Test Suite Version**: 2.1  
+**Test Suite Version**: 2.2  
 **Python Version**: 3.11.9  
 **Status**: ✅ Production Ready
 

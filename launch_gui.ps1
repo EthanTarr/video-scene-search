@@ -15,7 +15,11 @@ Write-Host ""
 # Change to script directory
 Set-Location $PSScriptRoot
 
-# Launch the GUI
-& "$env:USERPROFILE\anaconda3\python.exe" "scripts/search_gui.py"
+# Activate virtual environment and launch GUI
+Write-Host "Activating virtual environment..." -ForegroundColor Green
+& ".\video-scene-search-env\Scripts\Activate.ps1"
+
+Write-Host "Launching GUI..." -ForegroundColor Green
+python "scripts/search_gui.py"
 
 Write-Host "GUI closed." -ForegroundColor Green

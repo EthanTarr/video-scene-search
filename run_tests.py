@@ -29,16 +29,13 @@ def run_command(command, description):
     print(f"Running: {command}")
     
     try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        # Don't capture output to avoid hanging on Windows with large output
+        result = subprocess.run(command, shell=True, check=True)
         print(f"✓ {description} completed successfully")
-        if result.stdout:
-            print(result.stdout)
         return True
     except subprocess.CalledProcessError as e:
         print(f"✗ {description} failed:")
         print(f"Error: {e}")
-        if e.stderr:
-            print(f"stderr: {e.stderr}")
         return False
 
 def install_test_requirements():

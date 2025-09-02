@@ -203,6 +203,19 @@ Keep your response concise and focused on visual elements that would be detectab
             "model_used": "none"
         }
     
+    def enhance_search_prompt(self, prompt: str) -> str:
+        """
+        Enhance a search prompt using GPT-4 and return the enhanced text.
+        
+        Args:
+            prompt: Original search prompt
+            
+        Returns:
+            Enhanced search prompt text
+        """
+        enhanced_info = self.enhance_prompt_with_gpt4(prompt)
+        return enhanced_info["combined_text"]
+    
     def create_hybrid_search_embedding(self, prompt: str, use_gpt4_enhancement: bool = True) -> Dict[str, np.ndarray]:
         """
         Create both CLIP and OpenAI embeddings for hybrid search capabilities.
