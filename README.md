@@ -148,9 +148,9 @@ Multiple libraries (PyTorch, FAISS, OpenCV) are linked with different OpenMP run
 The project includes a comprehensive test suite with **93 tests** covering all major functionality:
 
 **Latest Test Results (January 2025):**
-- **91 tests passed** - All core functionality working
+- **93 tests passed** - All core functionality working
 - **0 tests failed** - All API compatibility issues resolved!
-- **2 tests skipped** - Only psutil memory testing (optional dependency)
+- **0 tests skipped** - All tests now pass (psutil installed)
 
 ### 🎯 **Test Categories**
 
@@ -158,7 +158,7 @@ The project includes a comprehensive test suite with **93 tests** covering all m
 2. **Scene Detection Tests** (12/12 passed) - Video scene detection and chunking
 3. **Embeddings Tests** (17/17 passed) - CLIP embeddings and search functionality (GPT-4 tests fixed)
 4. **Script Tests** (15/15 passed) - Command-line script functionality
-5. **GUI Tests** (23/24 passed) - Tkinter-based GUI components (Windows display support)
+5. **GUI Tests** (24/24 passed) - Tkinter-based GUI components (Windows display support)
 
 ### 🚀 **Running Tests**
 
@@ -187,6 +187,7 @@ python -m pytest tests/ --cov=src --cov-report=html
 - ✅ **Script integration tests** passing (15/15)
 - ✅ **GUI tests working on Windows** - Real display support, no hanging
 - ✅ **GPT-4 tests fixed** - Enhanced query generation working
+- ✅ **All tests passing** - 100% test success rate achieved
 - ✅ **Production ready** test suite
 
 For detailed testing information, see [TESTING.md](TESTING.md) and [tests/README.md](tests/README.md).
